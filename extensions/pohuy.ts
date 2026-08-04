@@ -1,16 +1,82 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import {
+  withFileMutationQueue,
+  type ExtensionAPI,
+} from "@earendil-works/pi-coding-agent";
 import type { AutocompleteItem } from "@earendil-works/pi-tui";
-import { readFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { mkdir, open, readFile, rename, rm, stat } from "node:fs/promises";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
 
 type Tier = "lite" | "full" | "ultra";
+type StoredTier = Tier | "normal";
 type State = { enabled: true; tier: Tier } | { enabled: false };
+type JsonObject = Record<string, unknown>;
 
-const STATE_TYPE = "pohuy-state";
+const SETTINGS_KEY = "pohuy";
+const SETTINGS_PATH = join(homedir(), ".pi", "agent", "settings.json");
 const TIERS = ["lite", "full", "ultra"] as const;
 const USAGE = "Use /pohuy, /pohuy lite, /pohuy full, /pohuy ultra, or /pohuy normal.";
 
-function isTier(value: string): value is Tier {
-  return (TIERS as readonly string[]).includes(value);
+function isJsonObject(value: unknown): value is JsonObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isTier(value: unknown): value is Tier {
+  return typeof value === "string" && (TIERS as readonly string[]).includes(value);
+}
+
+function stateFor(tier: StoredTier): State {
+  return tier === "normal" ? { enabled: false } : { enabled: true, tier };
+}
+
+async function readStoredTier(): Promise<StoredTier> {
+  try {
+    const settings: unknown = JSON.parse(await readFile(SETTINGS_PATH, "utf8"));
+    if (!isJsonObject(settings) || !isJsonObject(settings[SETTINGS_KEY])) return "normal";
+
+    const tier = settings[SETTINGS_KEY].tier;
+    return tier === "normal" || isTier(tier) ? tier : "normal";
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return "normal";
+    throw error;
+  }
+}
+
+async function saveStoredTier(tier: StoredTier): Promise<void> {
+  await withFileMutationQueue(SETTINGS_PATH, async () => {
+    await mkdir(dirname(SETTINGS_PATH), { recursive: true });
+
+    let settings: JsonObject = {};
+    try {
+      const parsed: unknown = JSON.parse(await readFile(SETTINGS_PATH, "utf8"));
+      if (!isJsonObject(parsed)) throw new Error(`${SETTINGS_PATH} must contain a JSON object`);
+      settings = parsed;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+
+    const temporary = `${SETTINGS_PATH}.${process.pid}.${randomUUID()}.tmp`;
+    try {
+      const mode = await stat(SETTINGS_PATH)
+        .then((info) => info.mode & 0o777)
+        .catch(() => 0o600);
+      const handle = await open(temporary, "wx", mode);
+      try {
+        await handle.writeFile(`${JSON.stringify({
+          ...settings,
+          [SETTINGS_KEY]: { tier },
+        }, null, 2)}\n`, "utf8");
+        await handle.sync();
+      } finally {
+        await handle.close();
+      }
+      await rename(temporary, SETTINGS_PATH);
+    } catch (error) {
+      await rm(temporary, { force: true }).catch(() => undefined);
+      throw error;
+    }
+  });
 }
 
 export default async function pohuyExtension(pi: ExtensionAPI) {
@@ -20,18 +86,8 @@ export default async function pohuyExtension(pi: ExtensionAPI) {
   );
   let state: State = { enabled: false };
 
-  pi.on("session_start", (_event, ctx) => {
-    state = { enabled: false };
-
-    for (const entry of [...ctx.sessionManager.getBranch()].reverse()) {
-      if (entry.type !== "custom" || entry.customType !== STATE_TYPE) continue;
-
-      const data = entry.data as { enabled?: unknown; tier?: unknown };
-      state = data.enabled === true && typeof data.tier === "string" && isTier(data.tier)
-        ? { enabled: true, tier: data.tier }
-        : { enabled: false };
-      break;
-    }
+  pi.on("session_start", async () => {
+    state = stateFor(await readStoredTier());
   });
 
   pi.registerCommand("pohuy", {
@@ -52,21 +108,30 @@ export default async function pohuyExtension(pi: ExtensionAPI) {
       }
 
       const value = tokens[0] ?? "full";
+      let tier: StoredTier;
       if (value === "normal") {
-        state = { enabled: false };
-        pi.appendEntry(STATE_TYPE, state);
-        if (ctx.hasUI) ctx.ui.notify("Pohuy disabled. Normal mode restored.", "info");
-        return;
-      }
-
-      if (!isTier(value)) {
+        tier = value;
+      } else if (isTier(value)) {
+        tier = value;
+      } else {
         if (ctx.hasUI) ctx.ui.notify(USAGE, "warning");
         return;
       }
 
-      state = { enabled: true, tier: value };
-      pi.appendEntry(STATE_TYPE, state);
-      if (ctx.hasUI) ctx.ui.notify(`Pohuy enabled: ${value}.`, "info");
+      try {
+        await saveStoredTier(tier);
+      } catch (error) {
+        if (ctx.hasUI) ctx.ui.notify(`Could not save Pohuy settings: ${String(error)}`, "error");
+        return;
+      }
+
+      state = stateFor(tier);
+      if (ctx.hasUI) {
+        ctx.ui.notify(
+          tier === "normal" ? "Pohuy disabled. Normal mode restored." : `Pohuy enabled: ${tier}.`,
+          "info",
+        );
+      }
     },
   });
 
