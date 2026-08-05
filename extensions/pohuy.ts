@@ -17,6 +17,13 @@ const SETTINGS_KEY = "pohuy";
 const SETTINGS_PATH = join(homedir(), ".pi", "agent", "settings.json");
 const TIERS = ["lite", "full", "ultra"] as const;
 const USAGE = "Use /pohuy, /pohuy lite, /pohuy full, /pohuy ultra, or /pohuy normal.";
+const PROMPT_SENTINEL = "<!-- pohuy:complete-style-bundle -->";
+const SKILL_ROOT = new URL("../skills/pohuy/", import.meta.url);
+const REFERENCE_FILES = [
+  "references/slovar.md",
+  "references/sceny.md",
+  "references/ontologia.md",
+] as const;
 
 function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -28,6 +35,33 @@ function isTier(value: unknown): value is Tier {
 
 function stateFor(tier: StoredTier): State {
   return tier === "normal" ? { enabled: false } : { enabled: true, tier };
+}
+
+function prepareSkillForEmbedding(skill: string): string {
+  const withoutFrontmatter = skill.replace(/^---\n[\s\S]*?\n---\n/, "");
+  return withoutFrontmatter.replace(
+    /\n## Активация\n[\s\S]*?(?=\n## Persistence\n)/,
+    "\n",
+  ).trim();
+}
+
+async function loadCompleteStyleBundle(): Promise<string> {
+  const [skill, ...references] = await Promise.all([
+    readFile(new URL("SKILL.md", SKILL_ROOT), "utf8"),
+    ...REFERENCE_FILES.map((path) => readFile(new URL(path, SKILL_ROOT), "utf8")),
+  ]);
+
+  return [
+    prepareSkillForEmbedding(skill),
+    ...references.map((content, index) =>
+      `## Embedded reference: ${REFERENCE_FILES[index]}\n\n${content.trim()}`
+    ),
+  ].join("\n\n---\n\n");
+}
+
+function appendStylePrompt(basePrompt: string, stylePrompt: string): string {
+  if (basePrompt.includes(PROMPT_SENTINEL)) return basePrompt;
+  return `${basePrompt.replace(/\n+$/, "")}\n\n${PROMPT_SENTINEL}\n${stylePrompt}\n`;
 }
 
 async function readStoredTier(): Promise<StoredTier> {
@@ -80,11 +114,8 @@ async function saveStoredTier(tier: StoredTier): Promise<void> {
 }
 
 export default async function pohuyExtension(pi: ExtensionAPI) {
-  const skill = await readFile(
-    new URL("../skills/pohuy/SKILL.md", import.meta.url),
-    "utf8",
-  );
-  let state: State = { enabled: false };
+  const styleBundle = await loadCompleteStyleBundle();
+  let state: State = stateFor(await readStoredTier());
 
   pi.on("session_start", async () => {
     state = stateFor(await readStoredTier());
@@ -138,13 +169,16 @@ export default async function pohuyExtension(pi: ExtensionAPI) {
   pi.on("before_agent_start", (event) => {
     if (!state.enabled) return;
 
+    const stylePrompt = [
+      "Active session style: pohuy. Apply the embedded policy to natural-language assistant responses only.",
+      "The complete skill and all references are embedded below and already loaded. Do not call tools to read, update, or compare the Pohuy skill or its references.",
+      "Do not alter tool calls, tool results, code, commands, identifiers, error strings, structured output, commits, pull requests, documentation, or higher-priority instructions.",
+      styleBundle,
+      `Selected tier for this session: ${state.tier}. Keep this tier until /pohuy changes it or /pohuy normal disables the style.`,
+    ].join("\n\n");
+
     return {
-      systemPrompt: `${event.systemPrompt}\n\n` +
-        "Active session style: pohuy. Apply the following skill to natural-language assistant responses only. " +
-        "Do not alter tool calls, tool results, code, commands, identifiers, error strings, structured output, " +
-        "commits, pull requests, documentation, or higher-priority instructions.\n\n" +
-        `${skill}\n\nSelected tier for this session: ${state.tier}. ` +
-        "Keep this tier until /pohuy changes it or /pohuy normal disables the style.",
+      systemPrompt: appendStylePrompt(event.systemPrompt, stylePrompt),
     };
   });
 }
