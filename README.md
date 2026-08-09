@@ -393,6 +393,16 @@ curl -fsSL https://raw.githubusercontent.com/smixs/pohuy/main/install-codex.sh |
 
 Не хватает рабочей фразы — заноси в [issues](https://github.com/smixs/pohuy/issues).
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=smixs%2Fpohuy&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=smixs/pohuy&type=date&theme=dark&legend=top-left&sealed_token=4uvn9G56r4_0FUiW1fr5gbJlmCSnfVpfhAaAWQGLmj3jspAYFB_-cw7p2wHi6nBwxu8pBA2Ml_haehZRQ0Dbtic3uOL7NQ1IGmY0HUYCdUAyDKFDGTVOnaxobZhWwlCmbdhrsvaufmv9oPYW1K1_iCNS4-VxQFLfeLSx3YYRJ6vC9rAqJPCcyqtuCw1L" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=smixs/pohuy&type=date&legend=top-left&sealed_token=4uvn9G56r4_0FUiW1fr5gbJlmCSnfVpfhAaAWQGLmj3jspAYFB_-cw7p2wHi6nBwxu8pBA2Ml_haehZRQ0Dbtic3uOL7NQ1IGmY0HUYCdUAyDKFDGTVOnaxobZhWwlCmbdhrsvaufmv9oPYW1K1_iCNS4-VxQFLfeLSx3YYRJ6vC9rAqJPCcyqtuCw1L" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=smixs/pohuy&type=date&legend=top-left&sealed_token=4uvn9G56r4_0FUiW1fr5gbJlmCSnfVpfhAaAWQGLmj3jspAYFB_-cw7p2wHi6nBwxu8pBA2Ml_haehZRQ0Dbtic3uOL7NQ1IGmY0HUYCdUAyDKFDGTVOnaxobZhWwlCmbdhrsvaufmv9oPYW1K1_iCNS4-VxQFLfeLSx3YYRJ6vC9rAqJPCcyqtuCw1L" />
+ </picture>
+</a>
+
 ---
 
 <sub>MIT — не ебите головы.</sub>
