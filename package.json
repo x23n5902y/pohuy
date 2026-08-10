@@ -6,6 +6,14 @@
   "keywords": [
     "pi-package"
   ],
+  "files": [
+    ".claude-plugin/",
+    "commands/",
+    "docs/",
+    "extensions/",
+    "skills/",
+    "ЧЕСТНЫЕ-ЦИФРЫ.md"
+  ],
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*"
@@ -13,9 +21,6 @@
   "pi": {
     "extensions": [
       "./extensions/pohuy.ts"
-    ],
-    "skills": [
-      "./skills"
     ]
   }
 }
