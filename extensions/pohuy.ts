@@ -384,7 +384,7 @@ async function readStoredSettings(): Promise<StoredSettings> {
       ? { tier, basePrompt }
       : { tier, basePrompt, selectedSections };
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT" || error instanceof SyntaxError) {
       return { tier: "normal", basePrompt: "default" };
     }
     throw error;
@@ -682,10 +682,25 @@ async function saveStoredSettings(patch: SettingsPatch): Promise<void> {
     await mkdir(dirname(SETTINGS_PATH), { recursive: true });
 
     let root: JsonObject = {};
+    let mode = 0o600;
     try {
-      const parsed: unknown = JSON.parse(await readFile(SETTINGS_PATH, "utf8"));
-      if (!isJsonObject(parsed)) throw new Error(`${SETTINGS_PATH} must contain a JSON object`);
-      root = parsed;
+      mode = (await stat(SETTINGS_PATH)).mode & 0o777;
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(await readFile(SETTINGS_PATH, "utf8"));
+      } catch (error) {
+        if (!(error instanceof SyntaxError)) throw error;
+        const backup = `${SETTINGS_PATH}.corrupt-${Date.now()}-${randomUUID()}`;
+        await rename(SETTINGS_PATH, backup);
+      }
+      if (parsed !== undefined) {
+        if (isJsonObject(parsed)) {
+          root = parsed;
+        } else {
+          const backup = `${SETTINGS_PATH}.corrupt-${Date.now()}-${randomUUID()}`;
+          await rename(SETTINGS_PATH, backup);
+        }
+      }
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
     }
@@ -701,9 +716,6 @@ async function saveStoredSettings(patch: SettingsPatch): Promise<void> {
 
     const temporary = `${SETTINGS_PATH}.${process.pid}.${randomUUID()}.tmp`;
     try {
-      const mode = await stat(SETTINGS_PATH)
-        .then((info) => info.mode & 0o777)
-        .catch(() => 0o600);
       const handle = await open(temporary, "wx", mode);
       try {
         await handle.writeFile(`${JSON.stringify({ ...root, [SETTINGS_KEY]: current }, null, 2)}\n`, "utf8");
