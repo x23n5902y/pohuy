@@ -1,0 +1,26 @@
+{
+  "name": "pohuy",
+  "version": "0.1.0",
+  "description": "Session-scoped Russian engineering response style for Pi",
+  "type": "module",
+  "keywords": [
+    "pi-package"
+  ],
+  "files": [
+    ".claude-plugin/",
+    "commands/",
+    "docs/",
+    "extensions/",
+    "skills/",
+    "ЧЕСТНЫЕ-ЦИФРЫ.md"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions/pohuy.ts"
+    ]
+  }
+}

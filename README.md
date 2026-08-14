@@ -264,11 +264,16 @@ investigation", только сразу ясно.
 # Claude Code — плагин
 claude plugin marketplace add smixs/pohuy && claude plugin install pohuy@pohuy
 
-# Cursor / Codex / Windsurf и прочие — через skills registry
+# Cursor / Codex / Windsurf и прочие - через skills registry
 npx skills add smixs/pohuy
+
+# Pi - пакет со скиллом и командой /pohuy
+pi install git:github.com/smixs/pohuy
 ```
 
-## **Включить:** `/pohuy` или скажи «та мне похуй / заебал». **Выключить:** «нормальный режим».
+Подробная настройка команды, TUI, источников и базового промпта: [расширение для Pi](./extensions/README.md).
+
+## **Включить:** `/pohuy` или скажи отдельной фразой «та мне похуй» / «заебал». **Выключить:** `/pohuy normal`, «нормальный режим» или «хватит материться».
 
 ## Насовсем: output style
 
@@ -310,7 +315,7 @@ curl -fsSL https://raw.githubusercontent.com/smixs/pohuy/main/install-codex.sh |
 
 ## Выбери калибр
 
-Три уровня. Переключение: `/pohuy <уровень>`. Держится до конца сессии.
+Три уровня. Переключение: `/pohuy <уровень>`. Выбор сохраняется между сессиями.
 
 | Уровень | Та же мысль |
 |---|---|
@@ -356,7 +361,7 @@ curl -fsSL https://raw.githubusercontent.com/smixs/pohuy/main/install-codex.sh |
 ## Как это работает
 
 1. Установка.
-2. ???
+2. Выбираешь калибр.
 3. Профит!
 
 ## Омаж
