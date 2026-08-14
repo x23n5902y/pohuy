@@ -313,6 +313,19 @@ curl -fsSL https://raw.githubusercontent.com/smixs/pohuy/main/install-codex.sh |
 `[features]` → `codex_hooks = true`. Чтобы встроенный характер Codex не спорил
 с Pohuy, там же можно поставить `personality = "none"`.
 
+## Pi
+
+[Pi](https://github.com/earendil-works/pi) — тоже полноценный агент, не хуже Claude Code
+или Codex. Для него в репо лежит нативное расширение: команда `/pohuy`, настройки
+в TUI, независимый выбор секций промпта и калибр, который переживает рестарт сессии.
+
+```bash
+pi install git:github.com/smixs/pohuy
+```
+
+Подробности: [extensions/README.md](./extensions/README.md).
+Спасибо [@AdamsGH](https://github.com/AdamsGH) за расширение ([#15](https://github.com/smixs/pohuy/pull/15)).
+
 ## Выбери калибр
 
 Три уровня. Переключение: `/pohuy <уровень>`. Выбор сохраняется между сессиями.
@@ -392,9 +405,12 @@ curl -fsSL https://raw.githubusercontent.com/smixs/pohuy/main/install-codex.sh |
 - [@imitry](https://github.com/imitry) — «хуёвые дела», «ебись оно всё конём», «хуета какая-то» ([#1](https://github.com/smixs/pohuy/issues/1))
 - [@GomelHawk](https://github.com/GomelHawk) — «охуеть не встать», «пизда рулю», «хуйня из-под коня», «ебанина», «ёбушки-воробушки» плюс научная база ([#2](https://github.com/smixs/pohuy/issues/2), [#3](https://github.com/smixs/pohuy/issues/3))
 - [@mikhashev](https://github.com/mikhashev) — правило «family-directed ругательств нет вообще» ([#4](https://github.com/smixs/pohuy/issues/4))
-- [@MaliciousGenius](https://github.com/MaliciousGenius) — онтология предметной области: ЗАЛУПА по Луману ([#5](https://github.com/smixs/pohuy/issues/5))
+- [@MaliciousGenius](https://github.com/MaliciousGenius) — онтология предметной области: ЗАЛУПА по Луману ([#5](https://github.com/smixs/pohuy/issues/5)), агентная лексика и субкритический режим ([#12](https://github.com/smixs/pohuy/issues/12), [#13](https://github.com/smixs/pohuy/issues/13))
 - [@maxonrock](https://github.com/maxonrock) — «ёбаный рот этого казино», «цирк с конями», «того всё ебал», «хуеверть» ([#6](https://github.com/smixs/pohuy/issues/6))
 - [@SVS696](https://github.com/SVS696) — теория и сарказма: мишень у нас баги и система, а не человек ([#8](https://github.com/smixs/pohuy/pull/8))
+- [@maloun](https://github.com/maloun) — «пиздарики», «ахуеть», «хуегрыз», «скибидык пиздык», «пук среньк» ([#16](https://github.com/smixs/pohuy/issues/16))
+- [@ByteCorn](https://github.com/ByteCorn) — семиотический корпус народных поговорок ([#14](https://github.com/smixs/pohuy/issues/14))
+- [@AdamsGH](https://github.com/AdamsGH) — нативное расширение для Pi ([#15](https://github.com/smixs/pohuy/pull/15))
 
 Не хватает рабочей фразы — заноси в [issues](https://github.com/smixs/pohuy/issues).
 
